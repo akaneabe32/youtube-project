@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YT Comment Exporter</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans JP", sans-serif; width: 460px; margin: 12px; }
+    label { display:block; font-size: 12px; margin: 8px 0 4px; }
+    input[type="text"], input[type="number"], textarea, select { width:100%; box-sizing: border-box; padding: 8px; }
+    textarea { height: 110px; resize: vertical; }
+    .row { display:flex; gap:8px; align-items:flex-end; }
+    .row > div { flex:1; }
+    .btnrow { display:flex; gap:10px; margin-top: 10px; }
+    button { flex:1; padding: 10px; cursor:pointer; }
+    #status { white-space: pre-wrap; font-size: 12px; margin-top: 8px; color:#333; }
+    .hint { font-size: 11px; color:#666; margin-top: 6px; }
+    .checkrow { display:flex; align-items:center; gap:8px; margin-top: 8px; }
+    .checkrow label { margin:0; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="row">
+    <div>
+      <label>APIキー</label>
+      <input id="apiKey" type="text" placeholder="AIza..." />
+    </div>
+  </div>
+
+  <label>動画 / プレイリストURL（改行区切りで複数可、空欄の場合は開いているページのURLで抽出）</label>
+  <textarea id="urlList" placeholder="https://www.youtube.com/watch?v=...&#10;https://www.youtube.com/playlist?list=..."></textarea>
+
+  <div class="row">
+    <div>
+      <label>抽出順</label>
+      <select id="sortMode">
+        <option value="time_new">時間（新しい順）</option>
+        <option value="likes">人気（いいね順）</option>
+        <option value="time_old">時間（古い順）</option>
+        <option value="relevance">関連度</option>
+      </select>
+    </div>
+    <div>
+      <label>抽出件数（0=全件）</label>
+      <input id="maxTop" type="number" min="0" step="1" value="200" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>出力形式</label>
+      <select id="outputFormat">
+        <option value="analysis_zip_both">AI分析ZIP（全体集計＋指標＋日次ローデータ）⭐</option>
+      </select>
+    </div>
+    <div></div>
+  </div>
+
+  <div class="checkrow">
+    <input id="includeReplies" type="checkbox" checked />
+    <label for="includeReplies">返信も取得</label>
+  </div>
+
+  <div class="checkrow">
+    <input id="includePerVideo" type="checkbox" />
+    <label for="includePerVideo">per_video（深掘り用ファイルも出力）</label>
+  </div>
+
+  <div class="btnrow">
+    <button id="runAllBtn" type="button">コメント全件一括＋実行</button>
+    <button id="runBtn" type="button">実行</button>
+  </div>
+
+  <div class="hint">
+    ※ 100本規模は時間がかかります（APIクォータも増えます）<br>
+    ※ デフォルトは軽量（per_video無し）。深掘り時のみ per_video をON推奨
+  </div>
+
+  <div id="status">準備中…</div>
+
+  <!-- 読み込み順：XLSX(使わなくてもOK) → JSZip → kuromoji → popup -->
+  <script src="xlsx.full.min.js"></script>
+  <script src="jszip.min.js"></script>
+  <script src="kuromoji.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

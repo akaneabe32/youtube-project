@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "YT Comment Exporter Batch",
+  "version": "2.0",
+  "description": "YouTubeコメント一括取得（複数URL・プレイリスト対応）",
+  "permissions": [
+    "storage",
+    "downloads",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.googleapis.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
