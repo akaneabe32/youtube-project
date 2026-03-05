@@ -141,8 +141,8 @@ function buildAndCacheJson() {
     // PropertiesService に保存（9KB制限あり）
     const props = PropertiesService.getScriptProperties();
 
-    if (jsonStr.length > MAX_PROP_SIZE * 10) {
-      // 10万文字超の場合は圧縮版を保存
+    if (jsonStr.length > MAX_PROP_SIZE * 20) {
+      // 17万文字超の場合は圧縮版を保存（PropertiesService合計500KB制限）
       Logger.log('警告: JSONが大きすぎます。サマリーのみ保存します。');
       const summary = _buildSummaryOnly(data);
       props.setProperty(CACHE_KEY, JSON.stringify(summary));
