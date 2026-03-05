@@ -91,9 +91,9 @@ const PLAYLIST_META = {
  */
 function doGet(e) {
   try {
-    // キャッシュから取得
+    // キャッシュから取得（チャンク分割保存に対応）
     const props = PropertiesService.getScriptProperties();
-    let jsonStr = props.getProperty(CACHE_KEY);
+    let jsonStr = props.getProperty(CACHE_KEY) || _loadChunked(props);
 
     // キャッシュが空の場合はリアルタイム生成
     if (!jsonStr) {
