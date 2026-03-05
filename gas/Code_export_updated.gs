@@ -162,9 +162,16 @@ function buildAndCacheJson() {
     // PropertiesService に保存（9KB制限あり）
     const props = PropertiesService.getScriptProperties();
 
-    if (jsonStr.length > MAX_PROP_SIZE * 20) {
-      // 17万文字超の場合は圧縮版を保存（PropertiesService合計500KB制限）
+    if (jsonStr.length > MAX_PROP_SIZE * 57) {
+      // 約484KB超の場合は圧縮版を保存（PropertiesService合計500KB上限の97%）
       Logger.log('警告: JSONが大きすぎます。サマリーのみ保存します。');
+      // ★ サマリーモード突入時はアラートメールを送信
+      _sendExportAlert(
+        'JSONサイズ上限超過：サマリーモードで保存しました',
+        `JSONサイズが ${jsonStr.length} bytes に達し、PropertiesService の上限を超えました。\n` +
+        `データが切り詰められています（trainees: 上位100件、dailyTrend: 直近30日）。\n` +
+        `動画数が数百本規模になった場合は GCS / BigQuery 等への移行を検討してください。`
+      );
       const summary = _buildSummaryOnly(data);
       props.setProperty(CACHE_KEY, JSON.stringify(summary));
     } else if (jsonStr.length > MAX_PROP_SIZE) {
