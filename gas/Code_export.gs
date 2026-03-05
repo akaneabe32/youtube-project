@@ -57,17 +57,17 @@ const PLAYLIST_META = {
     priority: 1,
     color:    '#FF6B9D',  // ダッシュボード表示用カラー
   },
-  'PL3fCPdnAFT0WqEHbmRCWZVBVpfKVUqUHx': {
+  'PL3fCPdnAFT0aogIr7kkuJS1mZnEZvpebm': {
     label:    'Theme Song THE FINAL CLOSE-UP',
     priority: 2,
     color:    '#4FC3F7',
   },
-  'PL3fCPdnAFT0ZmfLCdHPPXGwMhEBJKNfwW': {
+  'PL3fCPdnAFT0aLb85MxO107J-_vagdf3H_': {
     label:    'SHINSEKAI SELFIE CHALLENGE',
     priority: 3,
     color:    '#81C784',
   },
-  'PL3fCPdnAFT0aCKwqGqJhBXHlLXDjOvQZh': {
+  'PL3fCPdnAFT0bkU6FmQplcjNJXKw7M5ROC': {
     label:    'SHINSEKAI 1MIN PR',
     priority: 4,
     color:    '#FFB74D',

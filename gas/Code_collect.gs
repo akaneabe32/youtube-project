@@ -57,19 +57,19 @@ const PLAYLISTS = [
     priority: 1  // 最優先：速報コンテンツ用
   },
   {
-    id: 'PL3fCPdnAFT0WqEHbmRCWZVBVpfKVUqUHx',
+    id: 'PL3fCPdnAFT0aogIr7kkuJS1mZnEZvpebm',
     name: 'finalCloseUp',
     label: 'Theme Song THE FINAL CLOSE-UP',
     priority: 2
   },
   {
-    id: 'PL3fCPdnAFT0ZmfLCdHPPXGwMhEBJKNfwW',
+    id: 'PL3fCPdnAFT0aLb85MxO107J-_vagdf3H_',
     name: 'selfie',
     label: 'SHINSEKAI SELFIE CHALLENGE',
     priority: 3
   },
   {
-    id: 'PL3fCPdnAFT0aCKwqGqJhBXHlLXDjOvQZh',
+    id: 'PL3fCPdnAFT0bkU6FmQplcjNJXKw7M5ROC',
     name: 'oneminPr',
     label: 'SHINSEKAI 1MIN PR',
     priority: 4
