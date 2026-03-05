@@ -1,0 +1,270 @@
+/*
+ * 新世界 S4 チッケム分析ダッシュボード
+ * Design: STAT PICK Brand Identity
+ * - Dark Navy background (#0a0e1f / #0d1230)
+ * - Pastel Gradient accent: Mint → Lavender → Pink (#a8edea → #c4b5fd → #f9a8d4)
+ * - White text (#ffffff / #f0f4ff)
+ * - Subtle grid lines on dark navy
+ * - Typography: Bebas Neue (display) + DM Sans (body) + Noto Sans JP (Japanese)
+ */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* STAT PICK Brand Tokens */
+  /* Pastel gradient stops: mint #a8edea → sky #93c5fd → lavender #c4b5fd → pink #f9a8d4 */
+  --color-mint: #a8edea;
+  --color-sky-pastel: #93c5fd;
+  --color-lavender: #c4b5fd;
+  --color-pink-pastel: #f9a8d4;
+  --color-navy-deep: #080c1e;
+  --color-navy-mid: #0d1230;
+  --color-navy-card: #111827;
+  --color-navy-elevated: #1a2035;
+}
+
+:root {
+  --radius: 0.5rem;
+  /* Dark Navy base */
+  --background: oklch(0.10 0.025 264);
+  --foreground: oklch(0.97 0.005 240);
+  --card: oklch(0.13 0.022 264);
+  --card-foreground: oklch(0.97 0.005 240);
+  --popover: oklch(0.13 0.022 264);
+  --popover-foreground: oklch(0.97 0.005 240);
+  /* Primary = lavender pastel */
+  --primary: oklch(0.75 0.12 290);
+  --primary-foreground: oklch(0.10 0.025 264);
+  --secondary: oklch(0.17 0.020 264);
+  --secondary-foreground: oklch(0.85 0.008 240);
+  --muted: oklch(0.17 0.020 264);
+  --muted-foreground: oklch(0.55 0.015 240);
+  /* Accent = mint pastel */
+  --accent: oklch(0.85 0.08 185);
+  --accent-foreground: oklch(0.10 0.025 264);
+  --destructive: oklch(0.65 0.20 15);
+  --destructive-foreground: oklch(0.97 0.005 240);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.75 0.12 290);
+  /* Chart colors: mint, lavender, pink, sky, soft-green */
+  --chart-1: oklch(0.85 0.08 185);
+  --chart-2: oklch(0.75 0.12 290);
+  --chart-3: oklch(0.82 0.10 340);
+  --chart-4: oklch(0.78 0.10 220);
+  --chart-5: oklch(0.80 0.09 155);
+  --sidebar: oklch(0.09 0.022 264);
+  --sidebar-foreground: oklch(0.97 0.005 240);
+  --sidebar-primary: oklch(0.75 0.12 290);
+  --sidebar-primary-foreground: oklch(0.10 0.025 264);
+  --sidebar-accent: oklch(0.15 0.020 264);
+  --sidebar-accent-foreground: oklch(0.97 0.005 240);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.75 0.12 290);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', 'Noto Sans JP', sans-serif;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+  
+  h1, h2, h3 {
+    font-family: 'Bebas Neue', 'Noto Sans JP', sans-serif;
+    letter-spacing: 0.05em;
+  }
+  
+  .font-display {
+    font-family: 'Bebas Neue', 'Noto Sans JP', sans-serif;
+    letter-spacing: 0.05em;
+  }
+  
+  .font-mono-data {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  .font-jp {
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+}
+
+/* =============================================
+   STAT PICK Brand Gradient Utilities
+   Pastel: Mint #a8edea → Lavender #c4b5fd → Pink #f9a8d4
+   ============================================= */
+
+.brand-gradient {
+  background: linear-gradient(135deg, #a8edea 0%, #c4b5fd 50%, #f9a8d4 100%);
+}
+
+.brand-gradient-text {
+  background: linear-gradient(135deg, #a8edea 0%, #c4b5fd 50%, #f9a8d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brand-gradient-subtle {
+  background: linear-gradient(135deg, rgba(168,237,234,0.15) 0%, rgba(196,181,253,0.15) 50%, rgba(249,168,212,0.15) 100%);
+}
+
+.brand-border-gradient {
+  border-image: linear-gradient(135deg, #a8edea, #c4b5fd, #f9a8d4) 1;
+}
+
+/* Active sidebar item gradient glow */
+.sidebar-active-glow {
+  background: linear-gradient(90deg, rgba(168,237,234,0.12) 0%, rgba(196,181,253,0.08) 100%);
+  border-left: 2px solid;
+  border-image: linear-gradient(180deg, #a8edea, #c4b5fd, #f9a8d4) 1;
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: all 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 24px rgba(196,181,253,0.15);
+}
+
+/* Navy background with subtle grid */
+.spotlight-bg {
+  background-color: #080c1e;
+  background-image:
+    linear-gradient(rgba(168,237,234,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168,237,234,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Sparkle animation for logo */
+@keyframes sparkle {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes pulseDot {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+/* Recharts custom overrides for brand palette */
+.recharts-cartesian-axis-tick text {
+  fill: rgba(240,244,255,0.45) !important;
+  font-size: 11px !important;
+}
+.recharts-cartesian-grid line {
+  stroke: rgba(168,237,234,0.06) !important;
+}
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #111827 !important;
+  border: 1px solid rgba(196,181,253,0.3) !important;
+  border-radius: 8px !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #a8edea, #c4b5fd, #f9a8d4);
+  border-radius: 2px;
+}
+
+/* Section heading accent bar */
+.section-accent-bar {
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, #a8edea, #c4b5fd, #f9a8d4);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* =============================================
+   STAT PICK Dashboard Card Base Style
+   Dark navy card with subtle pastel border
+   ============================================= */
+
+.dash-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(168, 237, 234, 0.10);
+  border-radius: 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dash-card:hover {
+  border-color: rgba(196, 181, 253, 0.18);
+}
