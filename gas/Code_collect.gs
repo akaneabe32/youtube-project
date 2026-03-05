@@ -23,6 +23,14 @@
  * トリガー設定:
  *   - collectDailyData: 毎日 午前2〜3時
  *   - backfillPlaylistIds: 初回1回のみ手動実行（既存データへの playlist_id 後付け）
+ *
+ * アラート設定:
+ *   - ALERT_EMAIL: スクリプトプロパティ "ALERT_EMAIL" にメールアドレスを設定
+ *   - エラー発生時にGmailで自動通知
+ *
+ * コメント差分取得:
+ *   - order=time で新しい順に取得し、既知の commentId が出たら即停止
+ *   - フェイルセーフ: 1動画あたり最大 MAX_COMMENT_PAGES ページ（デフォルト10ページ=1,000件）
  */
 
 // ============================================================
@@ -115,7 +123,9 @@ function collectDailyData() {
   const ssId   = props.getProperty('SPREADSHEET_ID');
 
   if (!apiKey || !ssId) {
-    Logger.log('ERROR: YT_API_KEY または SPREADSHEET_ID が設定されていません。');
+    const msg = 'ERROR: YT_API_KEY または SPREADSHEET_ID が設定されていません。';
+    Logger.log(msg);
+    _sendAlert('【STAT PICK】GAS設定エラー', msg);
     return;
   }
 
@@ -135,20 +145,39 @@ function collectDailyData() {
   // ヘッダー行の確認・追加
   _ensureMasterHeader(masterSheet);
 
-  // 各プレイリストを処理
+  // 各プレイリストを処理（エラーを収集してまとめてアラート）
+  const errors = [];
   for (const playlist of PLAYLISTS) {
     Logger.log(`処理開始: ${playlist.label} (${playlist.id})`);
     try {
       _processPlaylist(ss, masterSheet, apiKey, playlist, recordDate, recordedAt);
       Logger.log(`処理完了: ${playlist.label}`);
     } catch (e) {
-      Logger.log(`ERROR [${playlist.label}]: ${e.message}`);
+      const errMsg = `[${playlist.label}]: ${e.message}`;
+      Logger.log(`ERROR ${errMsg}`);
+      errors.push(errMsg);
     }
     // API クォータ保護のため少し待機
     Utilities.sleep(500);
   }
 
-  Logger.log(`collectDailyData 完了: recordDate=${recordDate}, recordedAt=${recordedAt}`);
+  // エラーがあればアラートメールを送信
+  if (errors.length > 0) {
+    const subject = `【STAT PICK】GAS自動収集エラー (${recordDate})`;
+    const body = [
+      `${recordDate} の自動データ収集で以下のエラーが発生しました。`,
+      '',
+      errors.map((e, i) => `${i + 1}. ${e}`).join('\n'),
+      '',
+      `実行日時: ${recordedAt}`,
+      '',
+      'スプレッドシートを確認し、必要に応じて手動で再実行してください。',
+      `https://docs.google.com/spreadsheets/d/${ssId}`
+    ].join('\n');
+    _sendAlert(subject, body);
+  }
+
+  Logger.log(`collectDailyData 完了: recordDate=${recordDate}, recordedAt=${recordedAt}, errors=${errors.length}`);
 }
 
 /**
@@ -386,7 +415,8 @@ function _updateMasterSheet(masterSheet, videoDetails, playlistId, recordedAt) {
 
 /**
  * 動画のコメントを取得して月別シートに保存する。
- * 既存コメントは重複保存しない（commentId で管理）。
+ * 差分取得: order=time で新しい順に取得し、既知の commentId が出たら即停止。
+ * フェイルセーフ: 1動画あたり最大 MAX_COMMENT_PAGES ページで強制停止。
  *
  * @param {string} apiKey
  * @param {Array<string>} videoIds
@@ -394,6 +424,8 @@ function _updateMasterSheet(masterSheet, videoDetails, playlistId, recordedAt) {
  * @param {SpreadsheetApp.Sheet} commentSheet
  */
 function _fetchAndSaveComments(apiKey, videoIds, playlistId, commentSheet) {
+  const MAX_COMMENT_PAGES = 10; // 1動画あたり最大10ページ（1,000件）
+
   // 既存 commentId のセットを構築
   const existingCommentIds = new Set();
   const existingData = commentSheet.getDataRange().getValues();
@@ -404,7 +436,10 @@ function _fetchAndSaveComments(apiKey, videoIds, playlistId, commentSheet) {
   const newComments = [];
 
   for (const videoId of videoIds) {
-    let pageToken = '';
+    let pageToken  = '';
+    let pageCount  = 0;
+    let shouldStop = false;
+
     do {
       const url = `https://www.googleapis.com/youtube/v3/commentThreads`
         + `?part=snippet`
@@ -434,28 +469,41 @@ function _fetchAndSaveComments(apiKey, videoIds, playlistId, commentSheet) {
         break;
       }
 
-      (json.items || []).forEach(item => {
+      const items = json.items || [];
+      for (const item of items) {
         const top = item.snippet.topLevelComment.snippet;
         const cid = item.snippet.topLevelComment.id;
 
-        if (!existingCommentIds.has(cid)) {
-          newComments.push([
-            videoId,
-            cid,
-            top.authorDisplayName,
-            top.textDisplay,
-            parseInt(top.likeCount || 0, 10),
-            top.publishedAt,
-            top.updatedAt,
-            playlistId
-          ]);
-          existingCommentIds.add(cid);
+        // 既知の commentId が出たら停止（差分取得の早期終了）
+        if (existingCommentIds.has(cid)) {
+          shouldStop = true;
+          break;
         }
-      });
 
+        newComments.push([
+          videoId,
+          cid,
+          top.authorDisplayName,
+          top.textDisplay,
+          parseInt(top.likeCount || 0, 10),
+          top.publishedAt,
+          top.updatedAt,
+          playlistId
+        ]);
+        existingCommentIds.add(cid);
+      }
+
+      pageCount++;
       pageToken = json.nextPageToken || '';
+
+      // フェイルセーフ: 最大ページ数に達したら警告して停止
+      if (pageCount >= MAX_COMMENT_PAGES && pageToken) {
+        Logger.log(`  警告: ${videoId} のコメント取得が上限(${MAX_COMMENT_PAGES}ページ)に達しました。残りは次回取得します。`);
+        break;
+      }
+
       Utilities.sleep(100);
-    } while (pageToken);
+    } while (pageToken && !shouldStop);
   }
 
   if (newComments.length > 0) {
@@ -548,6 +596,37 @@ function _ensureDailyLogHeader(sheet) {
   // 初回セットアップ時
   if (!firstRow[0]) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  }
+}
+
+// ============================================================
+// アラート機能
+// ============================================================
+
+/**
+ * エラーアラートメールを送信する。
+ * スクリプトプロパティ "ALERT_EMAIL" にメールアドレスが設定されている場合のみ送信。
+ * 未設定の場合はスクリプト実行者のメールアドレスに送信。
+ *
+ * @param {string} subject - メール件名
+ * @param {string} body    - メール本文
+ */
+function _sendAlert(subject, body) {
+  try {
+    const props      = PropertiesService.getScriptProperties();
+    const alertEmail = props.getProperty('ALERT_EMAIL') || Session.getActiveUser().getEmail();
+    if (!alertEmail) {
+      Logger.log('アラートメール: 送信先メールアドレスが取得できませんでした。');
+      return;
+    }
+    MailApp.sendEmail({
+      to:      alertEmail,
+      subject: subject,
+      body:    body
+    });
+    Logger.log(`アラートメール送信: ${alertEmail} / ${subject}`);
+  } catch (e) {
+    Logger.log(`アラートメール送信失敗: ${e.message}`);
   }
 }
 
