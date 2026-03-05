@@ -26,8 +26,15 @@
  *                  viewCount, likeCount, commentCount, publishedAt,
  *                  likeRate, commentRate, engagementRate }],
  *     dailyTrend: [{ date, totalViews, totalLikes, totalComments }],
- *     playlistSummary: [{ playlist_id, videoCount, totalViews, totalLikes, totalComments }]
+ *     playlistSummary: [{ playlist_id, label, videoCount, totalViews, totalLikes, totalComments,
+ *                         avgLikeRate, avgCommentRate, avgEngagementRate }],
+ *     playlistDailyTrend: {
+ *       [playlist_id]: [{ date, totalViews, totalLikes, totalComments }]
+ *     }
  *   }
+ *
+ * プレイリストメタ情報:
+ *   PLAYLIST_META 定数でプレイリストID→表示名のマッピングを管理する
  */
 
 // ============================================================
@@ -39,6 +46,33 @@ const CACHE_KEY = 'dashboard_data_json';
 
 /** 最大保存サイズ（PropertiesService の上限は 9KB/プロパティ） */
 const MAX_PROP_SIZE = 8500;
+
+/**
+ * プレイリストID → 表示名・優先度のマッピング
+ * 新しいプレイリストが追加された場合はここに追加すること
+ */
+const PLAYLIST_META = {
+  'PL3fCPdnAFT0YNA-DdjkWikiwcsct0vow0': {
+    label:    '推しカメラ｜新世界',
+    priority: 1,
+    color:    '#FF6B9D',  // ダッシュボード表示用カラー
+  },
+  'PL3fCPdnAFT0WqEHbmRCWZVBVpfKVUqUHx': {
+    label:    'Theme Song THE FINAL CLOSE-UP',
+    priority: 2,
+    color:    '#4FC3F7',
+  },
+  'PL3fCPdnAFT0ZmfLCdHPPXGwMhEBJKNfwW': {
+    label:    'SHINSEKAI SELFIE CHALLENGE',
+    priority: 3,
+    color:    '#81C784',
+  },
+  'PL3fCPdnAFT0aCKwqGqJhBXHlLXDjOvQZh': {
+    label:    'SHINSEKAI 1MIN PR',
+    priority: 4,
+    color:    '#FFB74D',
+  },
+};
 
 // ============================================================
 // Webアプリ エントリーポイント
@@ -210,14 +244,74 @@ function _buildDashboardData() {
   trainees.forEach(t => {
     const pid = t.playlist_id || 'unknown';
     if (!playlistMap[pid]) {
-      playlistMap[pid] = { playlist_id: pid, videoCount: 0, totalViews: 0, totalLikes: 0, totalComments: 0 };
+      const meta = PLAYLIST_META[pid] || { label: pid, priority: 99, color: '#888888' };
+      playlistMap[pid] = {
+        playlist_id: pid,
+        label:       meta.label,
+        priority:    meta.priority,
+        color:       meta.color,
+        videoCount:  0,
+        totalViews:  0,
+        totalLikes:  0,
+        totalComments: 0,
+        // 平均エンゲージメント率計算用
+        _sumLikeRate:       0,
+        _sumCommentRate:    0,
+        _sumEngagementRate: 0,
+      };
     }
     playlistMap[pid].videoCount++;
     playlistMap[pid].totalViews    += t.viewCount;
     playlistMap[pid].totalLikes    += t.likeCount;
     playlistMap[pid].totalComments += t.commentCount;
+    playlistMap[pid]._sumLikeRate       += t.likeRate;
+    playlistMap[pid]._sumCommentRate    += t.commentRate;
+    playlistMap[pid]._sumEngagementRate += t.engagementRate;
   });
-  const playlistSummary = Object.values(playlistMap);
+
+  const playlistSummary = Object.values(playlistMap)
+    .sort((a, b) => a.priority - b.priority)
+    .map(p => ({
+      playlist_id:        p.playlist_id,
+      label:              p.label,
+      priority:           p.priority,
+      color:              p.color,
+      videoCount:         p.videoCount,
+      totalViews:         p.totalViews,
+      totalLikes:         p.totalLikes,
+      totalComments:      p.totalComments,
+      avgLikeRate:        p.videoCount > 0 ? Math.round((p._sumLikeRate       / p.videoCount) * 10000) / 10000 : 0,
+      avgCommentRate:     p.videoCount > 0 ? Math.round((p._sumCommentRate    / p.videoCount) * 10000) / 10000 : 0,
+      avgEngagementRate:  p.videoCount > 0 ? Math.round((p._sumEngagementRate / p.videoCount) * 10000) / 10000 : 0,
+    }));
+
+  // --- プレイリスト別日次トレンド ---
+  // daily_logの playlist_id 列を使ってプレイリスト別に集計
+  const playlistIdColIdx = dailyHeader.indexOf('playlist_id');
+  const playlistDailyMap = {}; // playlist_id → { date → { totalViews, ... } }
+
+  if (dateColIdx >= 0 && playlistIdColIdx >= 0) {
+    dailyRows.forEach(row => {
+      const dateStr = row[dateColIdx] ? String(row[dateColIdx]).substring(0, 10) : '';
+      const pid     = row[playlistIdColIdx] ? String(row[playlistIdColIdx]) : 'unknown';
+      if (!dateStr || !pid) return;
+
+      if (!playlistDailyMap[pid]) playlistDailyMap[pid] = {};
+      if (!playlistDailyMap[pid][dateStr]) {
+        playlistDailyMap[pid][dateStr] = { date: dateStr, totalViews: 0, totalLikes: 0, totalComments: 0 };
+      }
+      playlistDailyMap[pid][dateStr].totalViews    += Number(row[viewColIdx])    || 0;
+      playlistDailyMap[pid][dateStr].totalLikes    += Number(row[likeColIdx])    || 0;
+      playlistDailyMap[pid][dateStr].totalComments += Number(row[commentColIdx]) || 0;
+    });
+  }
+
+  // 各プレイリストの日次トレンドを日付順にソート
+  const playlistDailyTrend = {};
+  for (const [pid, dateMap] of Object.entries(playlistDailyMap)) {
+    playlistDailyTrend[pid] = Object.values(dateMap)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
 
   // --- メタ情報 ---
   const totalViews    = trainees.reduce((s, t) => s + t.viewCount,    0);
@@ -238,9 +332,10 @@ function _buildDashboardData() {
       totalViews:    totalViews,
       totalLikes:    totalLikes,
     },
-    trainees:        trainees,
-    dailyTrend:      dailyTrend,
-    playlistSummary: playlistSummary,
+    trainees:            trainees,
+    dailyTrend:          dailyTrend,
+    playlistSummary:     playlistSummary,
+    playlistDailyTrend:  playlistDailyTrend,
   };
 }
 

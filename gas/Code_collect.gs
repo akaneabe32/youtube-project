@@ -3,8 +3,8 @@
  * YouTube Data API v3 からデータを収集し、Googleスプレッドシートに保存するスクリプト。
  *
  * 対象プレイリスト（SHINSEKAI関連）:
+ *   - 推しカメラ｜新世界 (SHINSEKAI)         ← 最優先（速報コンテンツ用）
  *   - Theme Song THE FINAL CLOSE-UP 💙
- *   - 推しカメラ｜新世界 (SHINSEKAI)
  *   - SHINSEKAI SELFIE CHALLENGE 📷
  *   - SHINSEKAI 1MIN PR 🌏
  *
@@ -22,6 +22,7 @@
  *
  * トリガー設定:
  *   - collectDailyData: 毎日 午前2〜3時
+ *   - buildAndCacheJson: 毎日 午前3〜4時（Code_export.gs）
  *   - backfillPlaylistIds: 初回1回のみ手動実行（既存データへの playlist_id 後付け）
  *
  * アラート設定:
@@ -31,6 +32,13 @@
  * コメント差分取得:
  *   - order=time で新しい順に取得し、既知の commentId が出たら即停止
  *   - フェイルセーフ: 1動画あたり最大 MAX_COMMENT_PAGES ページ（デフォルト10ページ=1,000件）
+ *
+ * 重複実行防止:
+ *   - PropertiesService の RUNNING_LOCK フラグで二重起動を防止
+ *   - セッション切れ等でフラグが残った場合は 2 時間後に自動タイムアウト
+ *   - 手動解除: forceReleaseLock() を実行
+ *
+ * 更新: 2026-03-05
  */
 
 // ============================================================
@@ -39,18 +47,19 @@
 
 /**
  * 収集対象プレイリスト一覧（優先度順）
+ * 新しいプレイリストが追加された場合は先頭に追加して priority を更新すること
  */
 const PLAYLISTS = [
-  {
-    id: 'PL3fCPdnAFT0WqEHbmRCWZVBVpfKVUqUHx',
-    name: 'finalCloseUp',
-    label: 'Theme Song THE FINAL CLOSE-UP',
-    priority: 1
-  },
   {
     id: 'PL3fCPdnAFT0YNA-DdjkWikiwcsct0vow0',
     name: 'oshiCamera',
     label: '推しカメラ｜新世界',
+    priority: 1  // 最優先：速報コンテンツ用
+  },
+  {
+    id: 'PL3fCPdnAFT0WqEHbmRCWZVBVpfKVUqUHx',
+    name: 'finalCloseUp',
+    label: 'Theme Song THE FINAL CLOSE-UP',
     priority: 2
   },
   {
@@ -118,66 +127,78 @@ const DAILY_COLS = {
  *   - recordedAt: 実際の取得日時（daily_log の recorded_at 列に使用）
  */
 function collectDailyData() {
-  const props = PropertiesService.getScriptProperties();
-  const apiKey = props.getProperty('YT_API_KEY');
-  const ssId   = props.getProperty('SPREADSHEET_ID');
-
-  if (!apiKey || !ssId) {
-    const msg = 'ERROR: YT_API_KEY または SPREADSHEET_ID が設定されていません。';
-    Logger.log(msg);
-    _sendAlert('【STAT PICK】GAS設定エラー', msg);
+  // 重複実行防止ロック
+  if (!_acquireLock()) {
+    Logger.log('=== collectDailyData スキップ: 既に実行中（重複起動防止） ===');
     return;
   }
 
-  const ss          = SpreadsheetApp.openById(ssId);
-  const masterSheet = ss.getSheetByName('動画マスタ');
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const apiKey = props.getProperty('YT_API_KEY');
+    const ssId   = props.getProperty('SPREADSHEET_ID');
 
-  // 前日付けを計算（実質的な実績日）
-  const now        = new Date();
-  const yesterday  = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const recordDate = Utilities.formatDate(yesterday, 'Asia/Tokyo', 'yyyy-MM-dd');
-  const recordedAt = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyy-MM-dd HH:mm:ss JST');
-
-  Logger.log(`実行日時: ${recordedAt}`);
-  Logger.log(`記録日付（前日付け）: ${recordDate}`);
-
-  // ヘッダー行の確認・追加
-  _ensureMasterHeader(masterSheet);
-
-  // 各プレイリストを処理（エラーを収集してまとめてアラート）
-  const errors = [];
-  for (const playlist of PLAYLISTS) {
-    Logger.log(`処理開始: ${playlist.label} (${playlist.id})`);
-    try {
-      _processPlaylist(ss, masterSheet, apiKey, playlist, recordDate, recordedAt);
-      Logger.log(`処理完了: ${playlist.label}`);
-    } catch (e) {
-      const errMsg = `[${playlist.label}]: ${e.message}`;
-      Logger.log(`ERROR ${errMsg}`);
-      errors.push(errMsg);
+    if (!apiKey || !ssId) {
+      const msg = 'ERROR: YT_API_KEY または SPREADSHEET_ID が設定されていません。';
+      Logger.log(msg);
+      _sendAlert('【STAT PICK】GAS設定エラー', msg);
+      return;
     }
-    // API クォータ保護のため少し待機
-    Utilities.sleep(500);
-  }
 
-  // エラーがあればアラートメールを送信
-  if (errors.length > 0) {
-    const subject = `【STAT PICK】GAS自動収集エラー (${recordDate})`;
-    const body = [
-      `${recordDate} の自動データ収集で以下のエラーが発生しました。`,
-      '',
-      errors.map((e, i) => `${i + 1}. ${e}`).join('\n'),
-      '',
-      `実行日時: ${recordedAt}`,
-      '',
-      'スプレッドシートを確認し、必要に応じて手動で再実行してください。',
-      `https://docs.google.com/spreadsheets/d/${ssId}`
-    ].join('\n');
-    _sendAlert(subject, body);
-  }
+    const ss          = SpreadsheetApp.openById(ssId);
+    const masterSheet = ss.getSheetByName('動画マスタ');
 
-  Logger.log(`collectDailyData 完了: recordDate=${recordDate}, recordedAt=${recordedAt}, errors=${errors.length}`);
+    // 前日付けを計算（実質的な実績日）
+    const now        = new Date();
+    const yesterday  = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const recordDate = Utilities.formatDate(yesterday, 'Asia/Tokyo', 'yyyy-MM-dd');
+    const recordedAt = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyy-MM-dd HH:mm:ss JST');
+
+    Logger.log(`実行日時: ${recordedAt}`);
+    Logger.log(`記録日付（前日付け）: ${recordDate}`);
+
+    // ヘッダー行の確認・追加
+    _ensureMasterHeader(masterSheet);
+
+    // 各プレイリストを処理（エラーを収集してまとめてアラート）
+    const errors = [];
+    for (const playlist of PLAYLISTS) {
+      Logger.log(`処理開始: ${playlist.label} (${playlist.id})`);
+      try {
+        _processPlaylist(ss, masterSheet, apiKey, playlist, recordDate, recordedAt);
+        Logger.log(`処理完了: ${playlist.label}`);
+      } catch (e) {
+        const errMsg = `[${playlist.label}]: ${e.message}`;
+        Logger.log(`ERROR ${errMsg}`);
+        errors.push(errMsg);
+      }
+      // API クォータ保護のため少し待機
+      Utilities.sleep(500);
+    }
+
+    // エラーがあればアラートメールを送信
+    if (errors.length > 0) {
+      const subject = `【STAT PICK】GAS自動収集エラー (${recordDate})`;
+      const body = [
+        `${recordDate} の自動データ収集で以下のアラーが発生しました。`,
+        '',
+        errors.map((e, i) => `${i + 1}. ${e}`).join('\n'),
+        '',
+        `実行日時: ${recordedAt}`,
+        '',
+        'スプレッドシートを確認し、必要に応じて手動で再実行してください。',
+        `https://docs.google.com/spreadsheets/d/${ssId}`
+      ].join('\n');
+      _sendAlert(subject, body);
+    }
+
+    Logger.log(`collectDailyData 完了: recordDate=${recordDate}, recordedAt=${recordedAt}, errors=${errors.length}`);
+
+  } finally {
+    // 正常・異常問わずロックを解除
+    _releaseLock();
+  }
 }
 
 /**
@@ -596,6 +617,71 @@ function _ensureDailyLogHeader(sheet) {
   // 初回セットアップ時
   if (!firstRow[0]) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  }
+}
+
+// ============================================================
+// 重複実行防止ロック
+// ============================================================
+
+const LOCK_KEY         = 'RUNNING_LOCK';
+const LOCK_STARTED_KEY = 'RUNNING_LOCK_STARTED';
+const LOCK_TIMEOUT_MS  = 2 * 60 * 60 * 1000; // 2時間
+
+/**
+ * 実行ロックを取得する。
+ * 既にロックが存在する場合は、タイムアウト（2時間）を超えていれば強制解除して取得。
+ * @returns {boolean} ロック取得成功なら true
+ */
+function _acquireLock() {
+  const props    = PropertiesService.getScriptProperties();
+  const existing = props.getProperty(LOCK_KEY);
+  if (existing === 'true') {
+    const startedStr = props.getProperty(LOCK_STARTED_KEY);
+    const started    = startedStr ? new Date(startedStr).getTime() : 0;
+    const elapsed    = Date.now() - started;
+    if (elapsed < LOCK_TIMEOUT_MS) {
+      Logger.log(`ロック取得失敗: 別の実行が進行中（${Math.round(elapsed / 60000)}分経過）`);
+      return false;
+    }
+    Logger.log(`ロックタイムアウト（${Math.round(elapsed / 60000)}分）: 強制解除して続行`);
+  }
+  props.setProperty(LOCK_KEY, 'true');
+  props.setProperty(LOCK_STARTED_KEY, new Date().toISOString());
+  return true;
+}
+
+/**
+ * 実行ロックを解除する
+ */
+function _releaseLock() {
+  const props = PropertiesService.getScriptProperties();
+  props.deleteProperty(LOCK_KEY);
+  props.deleteProperty(LOCK_STARTED_KEY);
+}
+
+/**
+ * ロックを手動で強制解除する（スタック時の緊急用）
+ * GASエディタから手動実行する。
+ */
+function forceReleaseLock() {
+  _releaseLock();
+  Logger.log('ロックを強制解除しました');
+}
+
+/**
+ * 現在のロック状態を確認する
+ * GASエディタから手動実行する。
+ */
+function checkLockStatus() {
+  const props   = PropertiesService.getScriptProperties();
+  const lock    = props.getProperty(LOCK_KEY);
+  const started = props.getProperty(LOCK_STARTED_KEY);
+  Logger.log(`RUNNING_LOCK: ${lock}`);
+  Logger.log(`LOCK_STARTED: ${started}`);
+  if (lock === 'true' && started) {
+    const elapsed = Math.round((Date.now() - new Date(started).getTime()) / 60000);
+    Logger.log(`経過時間: ${elapsed}分`);
   }
 }
 
