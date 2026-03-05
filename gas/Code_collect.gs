@@ -153,7 +153,7 @@ function collectDailyData() {
     const yesterday  = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     const recordDate = Utilities.formatDate(yesterday, 'Asia/Tokyo', 'yyyy-MM-dd');
-    const recordedAt = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyy-MM-dd HH:mm:ss JST');
+    const recordedAt = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyy-MM-dd HH:mm:ss') + ' JST';
 
     Logger.log(`実行日時: ${recordedAt}`);
     Logger.log(`記録日付（前日付け）: ${recordDate}`);
