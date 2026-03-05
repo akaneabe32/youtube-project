@@ -622,11 +622,18 @@ function getLatestCommentPublishedAt(analysisReadyRows) {
 ================================= */
 function sanitizeFilename(n) {
   return String(n || "")
-    .replace(/[\\/:*?"<>|]/g, "")          // 半角禁止文字
-    .replace(/[\uFF5C\uFF0F\uFFE5\uFF0A\uFF1F\uFF1C\uFF1E\u300C\u300D\u300E\u300F]/g, "") // 全角禁止文字（｜を含む）
+    // 半角禁止文字（Windows/macOS/Linux共通）
+    .replace(/[\\/:*?"<>|]/g, "")
+    // 全角禁止文字（U+FF5C ｜ など）
+    .replace(/[\uFF5C\uFF0F\uFF3A\uFF1A\uFF0A\uFF1F\uFF02\uFF1C\uFF1E]/g, "")
+    // ゼロ幅文字
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    // 空白をアンダースコアに
     .replace(/\s+/g, "_")
-    .trim()
-    .replace(/^[._]+|[._]+$/g, "")         // 先頭・末尾のドット・アンダースコアを除去
+    // 連続アンダースコアを1つに
+    .replace(/_+/g, "_")
+    // 先頭・末尾のアンダースコアを除去
+    .replace(/^_|_$/g, "")
     .slice(0, 80);
 }
 
