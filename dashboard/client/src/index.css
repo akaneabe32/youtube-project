@@ -1,11 +1,33 @@
 /*
  * 新世界 S4 チッケム分析ダッシュボード
- * Design: STAT PICK Brand Identity
- * - Dark Navy background (#0a0e1f / #0d1230)
- * - Pastel Gradient accent: Mint → Lavender → Pink (#a8edea → #c4b5fd → #f9a8d4)
- * - White text (#ffffff / #f0f4ff)
- * - Subtle grid lines on dark navy
- * - Typography: Bebas Neue (display) + DM Sans (body) + Noto Sans JP (Japanese)
+ * Design: STAT PICK Brand Identity v2 (Notion ガイドライン準拠)
+ *
+ * === Base Colors ===
+ * Deep Space Navy  #0D1526  (最暗部・グロー下地)
+ * Midnight Navy    #111B35  (主背景)
+ * Steel Navy       #1A2744  (カード・パネル)
+ *
+ * === Aurora Gradient (ロゴ実測値) ===
+ * Aurora Pink      #F4A7BB
+ * Crystal Cyan     #7DD8F0
+ * Lavender Mist    #B8A8F5
+ *
+ * === Text & UI ===
+ * Pure White       #FFFFFF
+ * Soft White       #E8EAF0
+ * Muted Gray       #8892A4
+ *
+ * === Dashboard Extended (5-color equal-weight) ===
+ * Aurora Pink      #F4A7BB  (1st series)
+ * Crystal Cyan     #7DD8F0  (2nd series)
+ * Lavender Mist    #B8A8F5  (3rd series)
+ * Mint Sage        #7ECFB3  (4th series)
+ * Warm Peach       #F5C07A  (5th series)
+ *
+ * === Typography ===
+ * Space Grotesk  — 英語見出し・チャンネル名
+ * Noto Sans JP   — 日本語全般・ダッシュボード本文
+ * Inter          — グラフラベル・数値・英語本文
  */
 
 @import "tailwindcss";
@@ -50,57 +72,90 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  
-  /* STAT PICK Brand Tokens */
-  /* Pastel gradient stops: mint #a8edea → sky #93c5fd → lavender #c4b5fd → pink #f9a8d4 */
-  --color-mint: #a8edea;
-  --color-sky-pastel: #93c5fd;
-  --color-lavender: #c4b5fd;
-  --color-pink-pastel: #f9a8d4;
-  --color-navy-deep: #080c1e;
-  --color-navy-mid: #0d1230;
-  --color-navy-card: #111827;
-  --color-navy-elevated: #1a2035;
+
+  /* =============================================
+     STAT PICK Brand Tokens (Notion ガイドライン準拠)
+     ============================================= */
+
+  /* Base */
+  --color-deep-space:   #0D1526;
+  --color-midnight:     #111B35;
+  --color-steel:        #1A2744;
+
+  /* Aurora Gradient */
+  --color-aurora-pink:  #F4A7BB;
+  --color-crystal-cyan: #7DD8F0;
+  --color-lavender:     #B8A8F5;
+
+  /* Extended 5-color palette */
+  --color-mint-sage:    #7ECFB3;
+  --color-warm-peach:   #F5C07A;
+
+  /* Text */
+  --color-pure-white:   #FFFFFF;
+  --color-soft-white:   #E8EAF0;
+  --color-muted-gray:   #8892A4;
+
+  /* Neutral for focus-graph */
+  --color-neutral-bar:  #D0D5E0;
 }
 
 :root {
   --radius: 0.5rem;
-  /* Dark Navy base */
-  --background: oklch(0.10 0.025 264);
-  --foreground: oklch(0.97 0.005 240);
-  --card: oklch(0.13 0.022 264);
-  --card-foreground: oklch(0.97 0.005 240);
-  --popover: oklch(0.13 0.022 264);
-  --popover-foreground: oklch(0.97 0.005 240);
-  /* Primary = lavender pastel */
-  --primary: oklch(0.75 0.12 290);
-  --primary-foreground: oklch(0.10 0.025 264);
-  --secondary: oklch(0.17 0.020 264);
-  --secondary-foreground: oklch(0.85 0.008 240);
-  --muted: oklch(0.17 0.020 264);
-  --muted-foreground: oklch(0.55 0.015 240);
-  /* Accent = mint pastel */
-  --accent: oklch(0.85 0.08 185);
-  --accent-foreground: oklch(0.10 0.025 264);
-  --destructive: oklch(0.65 0.20 15);
+
+  /* === Midnight Navy base === */
+  /* #111B35 → oklch(0.175 0.048 264) */
+  --background:            oklch(0.175 0.048 264);
+  --foreground:            oklch(0.96 0.006 240);
+
+  /* Steel Navy cards: #1A2744 → oklch(0.215 0.055 264) */
+  --card:                  oklch(0.215 0.055 264);
+  --card-foreground:       oklch(0.96 0.006 240);
+  --popover:               oklch(0.215 0.055 264);
+  --popover-foreground:    oklch(0.96 0.006 240);
+
+  /* Primary = Lavender Mist #B8A8F5 → oklch(0.73 0.13 290) */
+  --primary:               oklch(0.73 0.13 290);
+  --primary-foreground:    oklch(0.175 0.048 264);
+
+  --secondary:             oklch(0.24 0.045 264);
+  --secondary-foreground:  oklch(0.88 0.008 240);
+  --muted:                 oklch(0.24 0.045 264);
+  --muted-foreground:      oklch(0.57 0.018 240);
+
+  /* Accent = Crystal Cyan #7DD8F0 → oklch(0.83 0.09 210) */
+  --accent:                oklch(0.83 0.09 210);
+  --accent-foreground:     oklch(0.175 0.048 264);
+
+  --destructive:           oklch(0.65 0.20 15);
   --destructive-foreground: oklch(0.97 0.005 240);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.75 0.12 290);
-  /* Chart colors: mint, lavender, pink, sky, soft-green */
-  --chart-1: oklch(0.85 0.08 185);
-  --chart-2: oklch(0.75 0.12 290);
-  --chart-3: oklch(0.82 0.10 340);
-  --chart-4: oklch(0.78 0.10 220);
-  --chart-5: oklch(0.80 0.09 155);
-  --sidebar: oklch(0.09 0.022 264);
-  --sidebar-foreground: oklch(0.97 0.005 240);
-  --sidebar-primary: oklch(0.75 0.12 290);
-  --sidebar-primary-foreground: oklch(0.10 0.025 264);
-  --sidebar-accent: oklch(0.15 0.020 264);
-  --sidebar-accent-foreground: oklch(0.97 0.005 240);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.75 0.12 290);
+
+  --border:                oklch(1 0 0 / 8%);
+  --input:                 oklch(1 0 0 / 10%);
+  --ring:                  oklch(0.73 0.13 290);
+
+  /* === Chart colors (5-color equal-weight palette) ===
+     1: Aurora Pink  #F4A7BB → oklch(0.76 0.10 355)
+     2: Crystal Cyan #7DD8F0 → oklch(0.83 0.09 210)
+     3: Lavender Mist #B8A8F5 → oklch(0.73 0.13 290)
+     4: Mint Sage    #7ECFB3 → oklch(0.79 0.09 165)
+     5: Warm Peach   #F5C07A → oklch(0.82 0.12 70)
+  */
+  --chart-1:               oklch(0.76 0.10 355);
+  --chart-2:               oklch(0.83 0.09 210);
+  --chart-3:               oklch(0.73 0.13 290);
+  --chart-4:               oklch(0.79 0.09 165);
+  --chart-5:               oklch(0.82 0.12 70);
+
+  /* Sidebar: Deep Space Navy #0D1526 → oklch(0.14 0.042 264) */
+  --sidebar:               oklch(0.14 0.042 264);
+  --sidebar-foreground:    oklch(0.96 0.006 240);
+  --sidebar-primary:       oklch(0.73 0.13 290);
+  --sidebar-primary-foreground: oklch(0.175 0.048 264);
+  --sidebar-accent:        oklch(0.22 0.048 264);
+  --sidebar-accent-foreground: oklch(0.96 0.006 240);
+  --sidebar-border:        oklch(1 0 0 / 8%);
+  --sidebar-ring:          oklch(0.73 0.13 290);
 }
 
 @layer base {
@@ -109,7 +164,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'DM Sans', 'Noto Sans JP', sans-serif;
+    /* Noto Sans JP: 日本語全般 / Inter: 英語本文・数値 */
+    font-family: 'Noto Sans JP', 'Inter', sans-serif;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -122,21 +178,25 @@
   input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
   }
-  
+
+  /* 英語見出し: Space Grotesk */
   h1, h2, h3 {
-    font-family: 'Bebas Neue', 'Noto Sans JP', sans-serif;
-    letter-spacing: 0.05em;
+    font-family: 'Space Grotesk', 'Noto Sans JP', sans-serif;
+    letter-spacing: 0.03em;
   }
-  
+
+  /* グラフラベル・数値: Inter */
+  .font-numeric {
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* 英語見出し */
   .font-display {
-    font-family: 'Bebas Neue', 'Noto Sans JP', sans-serif;
-    letter-spacing: 0.05em;
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: 0.03em;
   }
-  
-  .font-mono-data {
-    font-family: 'JetBrains Mono', monospace;
-  }
-  
+
+  /* 日本語 */
   .font-jp {
     font-family: 'Noto Sans JP', sans-serif;
   }
@@ -144,33 +204,37 @@
 
 /* =============================================
    STAT PICK Brand Gradient Utilities
-   Pastel: Mint #a8edea → Lavender #c4b5fd → Pink #f9a8d4
+   Aurora Gradient: Pink #F4A7BB → Cyan #7DD8F0 → Lavender #B8A8F5
    ============================================= */
 
 .brand-gradient {
-  background: linear-gradient(135deg, #a8edea 0%, #c4b5fd 50%, #f9a8d4 100%);
+  background: linear-gradient(135deg, #F4A7BB 0%, #7DD8F0 50%, #B8A8F5 100%);
 }
 
 .brand-gradient-text {
-  background: linear-gradient(135deg, #a8edea 0%, #c4b5fd 50%, #f9a8d4 100%);
+  background: linear-gradient(135deg, #F4A7BB 0%, #7DD8F0 50%, #B8A8F5 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .brand-gradient-subtle {
-  background: linear-gradient(135deg, rgba(168,237,234,0.15) 0%, rgba(196,181,253,0.15) 50%, rgba(249,168,212,0.15) 100%);
+  background: linear-gradient(135deg,
+    rgba(244,167,187,0.12) 0%,
+    rgba(125,216,240,0.12) 50%,
+    rgba(184,168,245,0.12) 100%
+  );
 }
 
 .brand-border-gradient {
-  border-image: linear-gradient(135deg, #a8edea, #c4b5fd, #f9a8d4) 1;
+  border-image: linear-gradient(135deg, #F4A7BB, #7DD8F0, #B8A8F5) 1;
 }
 
 /* Active sidebar item gradient glow */
 .sidebar-active-glow {
-  background: linear-gradient(90deg, rgba(168,237,234,0.12) 0%, rgba(196,181,253,0.08) 100%);
+  background: linear-gradient(90deg, rgba(125,216,240,0.12) 0%, rgba(184,168,245,0.08) 100%);
   border-left: 2px solid;
-  border-image: linear-gradient(180deg, #a8edea, #c4b5fd, #f9a8d4) 1;
+  border-image: linear-gradient(180deg, #F4A7BB, #7DD8F0, #B8A8F5) 1;
 }
 
 /* Card hover effect */
@@ -179,15 +243,15 @@
 }
 .card-hover:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 24px rgba(196,181,253,0.15);
+  box-shadow: 0 4px 24px rgba(184,168,245,0.15);
 }
 
-/* Navy background with subtle grid */
+/* Main background with subtle grid */
 .spotlight-bg {
-  background-color: #080c1e;
+  background-color: #111B35;
   background-image:
-    linear-gradient(rgba(168,237,234,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(168,237,234,0.03) 1px, transparent 1px);
+    linear-gradient(rgba(125,216,240,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125,216,240,0.03) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
@@ -219,15 +283,16 @@
 
 /* Recharts custom overrides for brand palette */
 .recharts-cartesian-axis-tick text {
-  fill: rgba(240,244,255,0.45) !important;
+  fill: #8892A4 !important;
+  font-family: 'Inter', sans-serif !important;
   font-size: 11px !important;
 }
 .recharts-cartesian-grid line {
-  stroke: rgba(168,237,234,0.06) !important;
+  stroke: rgba(125,216,240,0.06) !important;
 }
 .recharts-tooltip-wrapper .recharts-default-tooltip {
-  background: #111827 !important;
-  border: 1px solid rgba(196,181,253,0.3) !important;
+  background: #1A2744 !important;
+  border: 1px solid rgba(184,168,245,0.3) !important;
   border-radius: 8px !important;
 }
 
@@ -240,7 +305,7 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #a8edea, #c4b5fd, #f9a8d4);
+  background: linear-gradient(180deg, #F4A7BB, #7DD8F0, #B8A8F5);
   border-radius: 2px;
 }
 
@@ -248,23 +313,35 @@
 .section-accent-bar {
   width: 3px;
   height: 100%;
-  background: linear-gradient(180deg, #a8edea, #c4b5fd, #f9a8d4);
+  background: linear-gradient(180deg, #F4A7BB, #7DD8F0, #B8A8F5);
   border-radius: 2px;
   flex-shrink: 0;
 }
 
 /* =============================================
    STAT PICK Dashboard Card Base Style
-   Dark navy card with subtle pastel border
+   Steel Navy card with subtle Aurora border
    ============================================= */
 
 .dash-card {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(168, 237, 234, 0.10);
+  border: 1px solid rgba(125, 216, 240, 0.10);
   border-radius: 10px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .dash-card:hover {
-  border-color: rgba(196, 181, 253, 0.18);
+  border-color: rgba(184, 168, 245, 0.20);
+  box-shadow: 0 2px 16px rgba(184, 168, 245, 0.08);
+}
+
+/* Glow effect (use sparingly: max 2 per screen) */
+.aurora-glow-pink {
+  box-shadow: 0 0 12px rgba(244, 167, 187, 0.25);
+}
+.aurora-glow-cyan {
+  box-shadow: 0 0 12px rgba(125, 216, 240, 0.25);
+}
+.aurora-glow-lavender {
+  box-shadow: 0 0 12px rgba(184, 168, 245, 0.25);
 }
