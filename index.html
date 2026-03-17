@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STAT PICK ファン投票 | 日プ新世界</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ===== CSS Variables ===== */
+:root {
+  --bg:        #0a0a0f;
+  --bg2:       #111118;
+  --bg3:       #1a1a26;
+  --card:      #16161f;
+  --border:    rgba(255,255,255,0.08);
+  --aurora1:   #7b6fff;
+  --aurora2:   #ff6fd8;
+  --aurora3:   #6fffb0;
+  --text:      #f0f0f5;
+  --muted:     #888899;
+  --danger:    #ff5f7e;
+  --radius:    12px;
+  --font-body: 'Noto Sans JP', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --font-disp: 'Bebas Neue', sans-serif;
+}
+
+/* ===== Reset ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== Aurora Background ===== */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(123,111,255,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 35% at 80% 85%, rgba(255,111,216,0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 60% 40%, rgba(111,255,176,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== Header / Nav ===== */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 16px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  font-family: var(--font-disp);
+  font-size: 22px;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, var(--aurora1), var(--aurora2), var(--aurora3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.nav {
+  display: flex;
+  gap: 4px;
+}
+.nav-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nav-btn.active, .nav-btn:hover { color: var(--text); background: var(--bg3); }
+.nav-btn.active { color: var(--aurora1); }
+
+/* ===== Container ===== */
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Page ===== */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ===== Step Indicator ===== */
+.step-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 24px;
+}
+.step-item {
+  flex: 1;
+  text-align: center;
+}
+.step-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  transition: all 0.3s;
+}
+.step-dot.done {
+  background: var(--aurora3);
+  border-color: var(--aurora3);
+  color: #0a0a0f;
+}
+.step-dot.active {
+  background: linear-gradient(135deg, var(--aurora1), var(--aurora2));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 0 16px rgba(123,111,255,0.5);
+}
+.step-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+.step-label.active { color: var(--aurora1); }
+.step-line {
+  height: 2px;
+  flex: 0 0 24px;
+  background: var(--border);
+  margin-bottom: 20px;
+}
+.step-line.done { background: var(--aurora3); }
+
+/* ===== Section Title ===== */
+.section-title {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin: 20px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.section-title span {
+  background: linear-gradient(135deg, var(--aurora1), var(--aurora2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ===== Pick Counter ===== */
+.pick-counter {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 64px;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+.pick-count {
+  font-family: var(--font-disp);
+  font-size: 28px;
+  letter-spacing: 1px;
+}
+.pick-count span { color: var(--aurora1); }
+.pick-count small { color: var(--muted); font-size: 18px; }
+.pick-counter-btns { display: flex; gap: 8px; }
+.btn-sm {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-sm:hover { border-color: var(--aurora1); color: var(--aurora1); }
+
+/* ===== Trainee Grid ===== */
+.trainee-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.trainee-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  user-select: none;
+}
+.trainee-card:hover { border-color: rgba(123,111,255,0.4); transform: translateY(-2px); }
+.trainee-card.selected {
+  border-color: var(--aurora1);
+  box-shadow: 0 0 0 2px rgba(123,111,255,0.3), 0 4px 20px rgba(123,111,255,0.2);
+}
+.trainee-card.selected-2 {
+  border-color: var(--aurora2);
+  box-shadow: 0 0 0 2px rgba(255,111,216,0.3), 0 4px 20px rgba(255,111,216,0.2);
+}
+.trainee-card.selected-1 {
+  border-color: var(--aurora3);
+  box-shadow: 0 0 0 2px rgba(111,255,176,0.3), 0 4px 20px rgba(111,255,176,0.2);
+}
+.trainee-card.unavailable {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.card-img-wrap {
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  position: relative;
+}
+.card-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  transition: transform 0.3s;
+  display: block;
+}
+.trainee-card:hover .card-img-wrap img { transform: scale(1.04); }
+.card-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--aurora1);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.trainee-card.selected .card-check,
+.trainee-card.selected-2 .card-check,
+.trainee-card.selected-1 .card-check { display: flex; }
+.trainee-card.selected-2 .card-check { background: var(--aurora2); }
+.trainee-card.selected-1 .card-check { background: var(--aurora3); color: #0a0a0f; }
+.card-info {
+  padding: 8px;
+}
+.card-name {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-nick {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--aurora1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-tag {
+  display: inline-block;
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-top: 3px;
+}
+.tag-jp { background: rgba(111,255,176,0.15); color: var(--aurora3); }
+.tag-kr { background: rgba(123,111,255,0.15); color: var(--aurora1); }
+.tag-other { background: rgba(255,111,216,0.15); color: var(--aurora2); }
+.tag-cand { background: rgba(255,200,111,0.15); color: #ffc86f; }
+
+/* ===== Profile Modal ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  background: var(--bg2);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 640px;
+  padding: 24px 20px 40px;
+  border-top: 1px solid var(--border);
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.modal-drag { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+.modal-content { display: flex; gap: 16px; align-items: flex-start; }
+.modal-img { width: 100px; height: 133px; object-fit: cover; object-position: top; border-radius: 10px; flex-shrink: 0; }
+.modal-info { flex: 1; }
+.modal-name { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+.modal-nick { font-family: var(--font-disp); font-size: 22px; letter-spacing: 2px; color: var(--aurora1); margin-bottom: 12px; }
+.modal-row { display: flex; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+.modal-key { color: var(--muted); width: 56px; flex-shrink: 0; }
+.modal-val { color: var(--text); }
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--bg3);
+  border: none;
+  color: var(--muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-sheet { position: relative; }
+
+/* ===== Buttons ===== */
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--aurora1), var(--aurora2));
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+}
+.btn-primary:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.btn-primary:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(123,111,255,0.4);
+}
+
+/* ===== Voted State ===== */
+.voted-banner {
+  background: linear-gradient(135deg, rgba(111,255,176,0.1), rgba(123,111,255,0.1));
+  border: 1px solid rgba(111,255,176,0.3);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.voted-banner h2 { font-size: 20px; margin-bottom: 8px; color: var(--aurora3); }
+.voted-banner p { color: var(--muted); font-size: 13px; }
+.voted-picks { margin-top: 16px; }
+.voted-picks h3 { font-size: 12px; color: var(--muted); margin-bottom: 8px; font-family: var(--font-mono); }
+.pick-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pick-chip {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.pick-chip.c1 { border-color: var(--aurora3); color: var(--aurora3); }
+.pick-chip.c2 { border-color: var(--aurora2); color: var(--aurora2); }
+
+/* ===== Ranking ===== */
+.ranking-list { display: flex; flex-direction: column; gap: 8px; }
+.rank-row {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s;
+}
+.rank-row:hover { border-color: var(--aurora1); }
+.rank-num {
+  font-family: var(--font-disp);
+  font-size: 24px;
+  width: 36px;
+  text-align: center;
+  color: var(--muted);
+}
+.rank-row:nth-child(1) .rank-num { color: #ffd700; }
+.rank-row:nth-child(2) .rank-num { color: #c0c0c0; }
+.rank-row:nth-child(3) .rank-num { color: #cd7f32; }
+.rank-img {
+  width: 44px;
+  height: 58px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.rank-info { flex: 1; }
+.rank-name { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.rank-nick { font-family: var(--font-mono); font-size: 11px; color: var(--aurora1); }
+.rank-bar-wrap { flex: 0 0 100px; }
+.rank-bar-bg {
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.rank-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--aurora1), var(--aurora2));
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+.rank-count { font-family: var(--font-mono); font-size: 11px; color: var(--muted); text-align: right; }
+
+/* ===== My Page ===== */
+.my-id-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.my-id-label { font-size: 11px; color: var(--muted); font-family: var(--font-mono); flex-shrink: 0; }
+.my-id-val { font-family: var(--font-mono); font-size: 11px; color: var(--aurora1); overflow: hidden; text-overflow: ellipsis; }
+.history-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.history-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.diff-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255,111,216,0.15);
+  color: var(--aurora2);
+}
+.history-section { margin-bottom: 10px; }
+.history-label {
+  font-size: 10px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  margin-bottom: 6px;
+}
+.history-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.history-chip {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 9px;
+  font-size: 11px;
+}
+.history-chip.changed { border-color: var(--aurora2); color: var(--aurora2); }
+.diff-arrow { color: var(--muted); font-size: 11px; margin: 0 4px; }
+
+/* ===== Loading / Error / Empty ===== */
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.loading::after {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border);
+  border-top-color: var(--aurora1);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 16px auto 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 12px 20px;
+  font-size: 13px;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 500;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: var(--aurora3); color: var(--aurora3); }
+.toast.error { border-color: var(--danger); color: var(--danger); }
+
+/* ===== Misc ===== */
+.notice {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  padding: 12px;
+  line-height: 1.7;
+}
+.total-votes { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">STAT PICK</div>
+    <nav class="nav">
+      <button class="nav-btn active" onclick="showPage('vote')">投票</button>
+      <button class="nav-btn" onclick="showPage('ranking')">ランキング</button>
+      <button class="nav-btn" onclick="showPage('mypage')">マイページ</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ==============================
+     投票ページ
+============================== -->
+<div id="page-vote" class="page active">
+  <div class="container">
+
+    <!-- ステップバー -->
+    <div class="step-bar" id="step-bar">
+      <div class="step-item">
+        <div class="step-dot active" id="dot-0">11</div>
+        <div class="step-label active" id="lbl-0">11 PICK</div>
+      </div>
+      <div class="step-line" id="line-0"></div>
+      <div class="step-item">
+        <div class="step-dot" id="dot-1">2</div>
+        <div class="step-label" id="lbl-1">2 PICK</div>
+      </div>
+      <div class="step-line" id="line-1"></div>
+      <div class="step-item">
+        <div class="step-dot" id="dot-2">1</div>
+        <div class="step-label" id="lbl-2">1 PICK</div>
+      </div>
+    </div>
+
+    <div id="vote-content">
+      <div class="loading">練習生データを読み込み中</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==============================
+     ランキングページ
+============================== -->
+<div id="page-ranking" class="page">
+  <div class="container">
+    <div id="ranking-content">
+      <div class="loading">ランキングを読み込み中</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================
+     マイページ
+============================== -->
+<div id="page-mypage" class="page">
+  <div class="container">
+    <div id="mypage-content">
+      <div class="loading">履歴を読み込み中</div>
+    </div>
+  </div>
+</div>
+
+<!-- プロフィールモーダル -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-drag"></div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-content" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// 設定
+// ============================================================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwP5ORBnnqaE5GK7r5v4tC1kd0QoxN1PLWrVf-PuRQLm8KH9ovKxiHLNdqpY0v8SVtU/exec';
+const IMAGE_BASE = 'https://produce101.jp/static/produce101audition/profile/env7uixvQmE8yymQYP/profile/';
+
+// ============================================================
+// ユーザーID管理
+// ============================================================
+function getUserId() {
+  let uid = localStorage.getItem('statpick_uid');
+  if (!uid) {
+    uid = 'sp-' + crypto.randomUUID();
+    localStorage.setItem('statpick_uid', uid);
+  }
+  return uid;
+}
+const USER_ID = getUserId();
+
+// ============================================================
+// 投票状態
+// ============================================================
+let step = 0;          // 0=11pick, 1=2pick, 2=1pick
+let pick11 = [];
+let pick2  = [];
+let pick1  = [];
+let trainees = [];     // 全練習生
+let todayVote = null;  // 本日の投票データ（済み時）
+
+// ============================================================
+// API
+// ============================================================
+async function apiGet(params) {
+  const url = GAS_URL + '?' + new URLSearchParams(params);
+  const res = await fetch(url);
+  return res.json();
+}
+async function apiPost(body) {
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+// ============================================================
+// ページ切替
+// ============================================================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'ranking') loadRanking();
+  if (name === 'mypage')  loadMyPage();
+}
+
+// ============================================================
+// Toast
+// ============================================================
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ============================================================
+// 練習生データ読み込み
+// ============================================================
+async function init() {
+  try {
+    // 投票済みチェック
+    const checked = await apiGet({ action: 'check_voted', user_id: USER_ID });
+    if (checked.voted) {
+      todayVote = checked.today_vote;
+      renderVotedState();
+      return;
+    }
+
+    // 練習生データ取得
+    const data = await apiGet({ action: 'trainees' });
+    if (data.error) throw new Error(data.error);
+    trainees = data.trainees || [];
+
+    renderStep();
+  } catch(e) {
+    document.getElementById('vote-content').innerHTML =
+      `<div class="empty">読み込みに失敗しました。<br><small>${e.message}</small></div>`;
+  }
+}
+
+// ============================================================
+// 投票済み表示
+// ============================================================
+function renderVotedState() {
+  const tv = todayVote;
+  const allIds = [...tv.pick11, ...tv.pick2, tv.pick1];
+  const traineeMap = {};
+  // 名前マップはtraineesがなければIDをそのまま表示
+
+  document.getElementById('vote-content').innerHTML = `
+    <div class="voted-banner">
+      <h2>✓ 本日の投票完了</h2>
+      <p>日本時間 0:00 にリセットされます</p>
+    </div>
+    <div class="voted-picks">
+      <div class="section-title">11 <span>PICK</span></div>
+      <div class="pick-chips">${tv.pick11.map(id => `<div class="pick-chip">${id}</div>`).join('')}</div>
+      <div class="section-title" style="margin-top:16px">2 <span>PICK</span></div>
+      <div class="pick-chips">${tv.pick2.map(id => `<div class="pick-chip c2">${id}</div>`).join('')}</div>
+      <div class="section-title" style="margin-top:16px">1 <span>PICK</span></div>
+      <div class="pick-chips"><div class="pick-chip c1">${tv.pick1}</div></div>
+    </div>
+    <p class="notice">※同じ端末・同じブラウザでのみ表示されます<br>※明日もぜひ投票してください！</p>
+  `;
+}
+
+// ============================================================
+// ステップUIレンダリング
+// ============================================================
+function updateStepBar() {
+  for (let i = 0; i < 3; i++) {
+    const dot = document.getElementById('dot-' + i);
+    const lbl = document.getElementById('lbl-' + i);
+    dot.className = 'step-dot' + (i < step ? ' done' : i === step ? ' active' : '');
+    lbl.className = 'step-label' + (i === step ? ' active' : '');
+    if (i < 2) {
+      const line = document.getElementById('line-' + i);
+      line.className = 'step-line' + (i < step ? ' done' : '');
+    }
+  }
+}
+
+function renderStep() {
+  updateStepBar();
+  if (step === 0) renderPickStep(11, pick11, trainees, [], 'pick11');
+  if (step === 1) renderPickStep(2, pick2, pick11.map(id => trainees.find(t => t.id === id)).filter(Boolean), trainees.filter(t => !pick11.includes(t.id)), 'pick2');
+  if (step === 2) renderPickStep(1, pick1, pick2.map(id => trainees.find(t => t.id === id)).filter(Boolean), trainees.filter(t => !pick2.includes(t.id)), 'pick1');
+}
+
+// ============================================================
+// Pick ステップ
+// ============================================================
+function renderPickStep(num, currentPicks, primary, secondary, pickKey) {
+  const needMore = num - currentPicks.length;
+  const isDone   = currentPicks.length === num;
+
+  let btnLabel = '';
+  if (pickKey === 'pick11') btnLabel = '次へ：2 PICK ▶';
+  if (pickKey === 'pick2')  btnLabel = '次へ：1 PICK ▶';
+  if (pickKey === 'pick1')  btnLabel = '投票する ✓';
+
+  const html = `
+    <div class="pick-counter">
+      <div class="pick-count">
+        <span>${currentPicks.length}</span><small> / ${num}</small>
+        <div style="font-size:12px;color:var(--muted);font-family:var(--font-mono);margin-top:2px">
+          ${isDone ? '✓ 選択完了' : `あと ${needMore} 人選んでください`}
+        </div>
+      </div>
+      <div class="pick-counter-btns">
+        ${step > 0 ? '<button class="btn-sm" onclick="goBack()">← 戻る</button>' : ''}
+        <button class="btn-sm" onclick="resetPick('${pickKey}')">リセット</button>
+      </div>
+    </div>
+
+    ${primary.length > 0 ? `
+      <div class="section-title">
+        ${step === 0 ? '練習生一覧' : step === 1 ? '⭐ 選んだ 11 人から選ぶ' : '⭐ 選んだ 2 人から選ぶ'}
+      </div>
+      <div class="trainee-grid" id="grid-primary">
+        ${primary.map(t => traineeCard(t, currentPicks, num)).join('')}
+      </div>
+    ` : ''}
+
+    ${secondary.length > 0 ? `
+      <div class="section-title" style="margin-top:20px">他の練習生から選ぶ</div>
+      <div class="trainee-grid" id="grid-secondary">
+        ${secondary.map(t => traineeCard(t, currentPicks, num)).join('')}
+      </div>
+    ` : ''}
+
+    <button class="btn-primary" id="next-btn" onclick="nextStep('${pickKey}')" ${isDone ? '' : 'disabled'}>
+      ${btnLabel}
+    </button>
+    <p class="notice">※写真タップでプロフィールを表示</p>
+  `;
+
+  document.getElementById('vote-content').innerHTML = html;
+}
+
+// ============================================================
+// カードHTML生成
+// ============================================================
+function traineeCard(t, currentPicks, maxPick) {
+  const isSelected = currentPicks.includes(t.id);
+  const isFull     = !isSelected && currentPicks.length >= maxPick;
+
+  let selClass = '';
+  let checkNum = '';
+  if (isSelected) {
+    const idx = currentPicks.indexOf(t.id) + 1;
+    if (maxPick === 11) { selClass = 'selected'; checkNum = idx; }
+    if (maxPick === 2)  { selClass = 'selected-2'; checkNum = idx; }
+    if (maxPick === 1)  { selClass = 'selected-1'; checkNum = '★'; }
+  }
+
+  const nat = t.nationality || '';
+  const tagClass = nat.includes('日本') ? 'tag-jp' : nat.includes('韓国') ? 'tag-kr' : nat ? 'tag-other' : '';
+  const tagLabel = nat;
+  const candTag  = t.is_candidate ? '<span class="card-tag tag-cand">候補</span>' : '';
+
+  return `
+    <div class="trainee-card ${selClass} ${isFull ? 'unavailable' : ''}"
+      onclick="togglePick('${t.id}', ${maxPick})"
+      oncontextmenu="openModal(event, '${t.id}')">
+      <div class="card-img-wrap">
+        <img src="${IMAGE_BASE}${t.id}.jpg" alt="${t.name_ja}" loading="lazy"
+          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 133%22><rect fill=%22%2316161f%22 width=%22100%22 height=%22133%22/></svg>'">
+        <div class="card-check">${checkNum}</div>
+      </div>
+      <div class="card-info">
+        <div class="card-name">${t.name_ja || t.id}</div>
+        <div class="card-nick">${t.name_en || ''}</div>
+        ${tagLabel ? `<span class="card-tag ${tagClass}">${tagLabel}</span>` : ''}
+        ${candTag}
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// Pick トグル
+// ============================================================
+function togglePick(id, maxPick) {
+  let arr;
+  if (maxPick === 11) arr = pick11;
+  if (maxPick === 2)  arr = pick2;
+  if (maxPick === 1)  arr = pick1;
+
+  const idx = arr.indexOf(id);
+  if (idx >= 0) {
+    arr.splice(idx, 1);
+  } else {
+    if (arr.length >= maxPick) return;
+    arr.push(id);
+  }
+
+  if (maxPick === 11) pick11 = arr;
+  if (maxPick === 2)  pick2  = arr;
+  if (maxPick === 1)  pick1  = arr;
+
+  renderStep();
+}
+
+function resetPick(key) {
+  if (key === 'pick11') pick11 = [];
+  if (key === 'pick2')  pick2  = [];
+  if (key === 'pick1')  pick1  = [];
+  renderStep();
+}
+
+function goBack() {
+  step--;
+  if (step === 1) pick2 = [];
+  if (step === 0) { pick11 = []; pick2 = []; }
+  renderStep();
+}
+
+// ============================================================
+// 次へ / 送信
+// ============================================================
+function nextStep(key) {
+  if (key === 'pick11') { step = 1; pick2 = []; renderStep(); return; }
+  if (key === 'pick2')  { step = 2; pick1 = []; renderStep(); return; }
+  if (key === 'pick1')  { submitVote(); }
+}
+
+async function submitVote() {
+  const btn = document.getElementById('next-btn');
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+  try {
+    const res = await apiPost({
+      action: 'vote',
+      user_id: USER_ID,
+      pick11,
+      pick2,
+      pick1
+    });
+    if (res.error) throw new Error(res.error);
+    todayVote = { pick11, pick2, pick1: pick1[0] };
+    showToast('投票完了！ありがとうございます 🎉');
+    renderVotedState();
+  } catch(e) {
+    showToast(e.message || '送信に失敗しました', 'error');
+    btn.disabled = false;
+    btn.textContent = '投票する ✓';
+  }
+}
+
+// ============================================================
+// プロフィールモーダル
+// ============================================================
+function openModal(e, id) {
+  e.preventDefault();
+  const t = trainees.find(x => x.id === id);
+  if (!t) return;
+
+  const age = t.birthday ? calcAge(t.birthday) : '';
+
+  document.getElementById('modal-body').innerHTML = `
+    <img class="modal-img" src="${IMAGE_BASE}${t.id}.jpg" alt="${t.name_ja}"
+      onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 133%22><rect fill=%22%2316161f%22 width=%22100%22 height=%22133%22/></svg>'">
+    <div class="modal-info">
+      <div class="modal-name">${t.name_ja || ''}</div>
+      <div class="modal-nick">${t.name_en || ''}</div>
+      ${t.nationality ? `<div class="modal-row"><span class="modal-key">国籍</span><span class="modal-val">${t.nationality}</span></div>` : ''}
+      ${t.birthday    ? `<div class="modal-row"><span class="modal-key">生年月日</span><span class="modal-val">${t.birthday}${age ? '（'+age+'歳）' : ''}</span></div>` : ''}
+      ${t.hometown    ? `<div class="modal-row"><span class="modal-key">出身地</span><span class="modal-val">${t.hometown}</span></div>` : ''}
+      ${t.height      ? `<div class="modal-row"><span class="modal-key">身長</span><span class="modal-val">${t.height}</span></div>` : ''}
+      ${t.mbti        ? `<div class="modal-row"><span class="modal-key">MBTI</span><span class="modal-val">${t.mbti}</span></div>` : ''}
+    </div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal') || e.currentTarget.classList.contains('modal-close')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+function calcAge(birthday) {
+  try {
+    const b = new Date(String(birthday).replace(/\//g, '-').replace(/年|月/g, '-').replace(/日/g, ''));
+    if (isNaN(b)) return '';
+    const today = new Date();
+    let age = today.getFullYear() - b.getFullYear();
+    if (today.getMonth() < b.getMonth() || (today.getMonth() === b.getMonth() && today.getDate() < b.getDate())) age--;
+    return age;
+  } catch { return ''; }
+}
+
+// ============================================================
+// ランキング
+// ============================================================
+async function loadRanking() {
+  document.getElementById('ranking-content').innerHTML = '<div class="loading">読み込み中</div>';
+  try {
+    const [rData, tData] = await Promise.all([
+      apiGet({ action: 'ranking' }),
+      trainees.length ? { trainees } : apiGet({ action: 'trainees' })
+    ]);
+    if (tData.trainees) trainees = tData.trainees;
+
+    const ranking = rData.ranking || [];
+    const total   = rData.total_votes || 0;
+    const max     = ranking[0]?.count || 1;
+
+    if (ranking.length === 0) {
+      document.getElementById('ranking-content').innerHTML = '<div class="empty">まだ投票データがありません</div>';
+      return;
+    }
+
+    const rows = ranking.map(r => {
+      const t = trainees.find(x => x.id === r.id) || {};
+      const pct = Math.round(r.count / max * 100);
+      return `
+        <div class="rank-row">
+          <div class="rank-num">${r.rank}</div>
+          <img class="rank-img" src="${IMAGE_BASE}${r.id}.jpg" alt="${r.id}"
+            onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 133%22><rect fill=%22%2316161f%22 width=%22100%22 height=%22133%22/></svg>'">
+          <div class="rank-info">
+            <div class="rank-name">${t.name_ja || r.id}</div>
+            <div class="rank-nick">${t.name_en || ''}</div>
+          </div>
+          <div class="rank-bar-wrap">
+            <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%"></div></div>
+            <div class="rank-count">${r.count.toLocaleString()} 票</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('ranking-content').innerHTML = `
+      <div class="total-votes">11 PICK 累計 ${total.toLocaleString()} 投票</div>
+      <div class="section-title">11 <span>PICK</span> ランキング</div>
+      <div class="ranking-list">${rows}</div>
+      <p class="notice">※2 PICK・1 PICK のランキングは非公開です</p>
+    `;
+  } catch(e) {
+    document.getElementById('ranking-content').innerHTML = `<div class="empty">読み込みに失敗しました<br><small>${e.message}</small></div>`;
+  }
+}
+
+// ============================================================
+// マイページ
+// ============================================================
+async function loadMyPage() {
+  document.getElementById('mypage-content').innerHTML = '<div class="loading">読み込み中</div>';
+  try {
+    const [hData, tData] = await Promise.all([
+      apiGet({ action: 'history', user_id: USER_ID }),
+      trainees.length ? { trainees } : apiGet({ action: 'trainees' })
+    ]);
+    if (tData.trainees) trainees = tData.trainees;
+
+    const history = hData.history || [];
+
+    const getName = id => {
+      const t = trainees.find(x => x.id === id);
+      return t ? (t.name_ja || id) : id;
+    };
+
+    const cards = history.map(h => {
+      const diff = h.diff;
+      const pick1Changed = diff && diff.pick1_changed;
+      const pick2Changed = diff && diff.pick2_changed;
+
+      return `
+        <div class="history-card">
+          <div class="history-date">
+            <span>${h.date}</span>
+            ${pick1Changed ? '<span class="diff-badge">1 PICK 変化あり</span>' : ''}
+          </div>
+
+          <div class="history-section">
+            <div class="history-label">11 PICK</div>
+            <div class="history-chips">
+              ${h.pick11.map(id => `<div class="history-chip">${getName(id)}</div>`).join('')}
+            </div>
+          </div>
+
+          <div class="history-section">
+            <div class="history-label">2 PICK</div>
+            <div class="history-chips">
+              ${h.pick2.map(id => `<div class="history-chip ${pick2Changed ? 'changed' : ''}">${getName(id)}</div>`).join('')}
+            </div>
+            ${pick2Changed ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">
+              前回：${diff.pick2_prev.map(getName).join(' / ')}
+            </div>` : ''}
+          </div>
+
+          <div class="history-section">
+            <div class="history-label">1 PICK</div>
+            <div class="history-chips">
+              <div class="history-chip ${pick1Changed ? 'changed' : ''}">${getName(h.pick1)}</div>
+            </div>
+            ${pick1Changed ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">
+              前回：${getName(diff.pick1_prev)}
+              <span class="diff-arrow">→</span>
+              ${getName(h.pick1)}
+            </div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('mypage-content').innerHTML = `
+      <div class="my-id-box">
+        <span class="my-id-label">MY ID</span>
+        <span class="my-id-val">${USER_ID}</span>
+      </div>
+      ${history.length === 0
+        ? '<div class="empty">投票履歴がまだありません</div>'
+        : `<div class="section-title">投票 <span>履歴</span></div>${cards}`
+      }
+      <p class="notice">※同じ端末・同じブラウザでのみ表示されます<br>※履歴削除・別ブラウザで開くと表示されません</p>
+    `;
+  } catch(e) {
+    document.getElementById('mypage-content').innerHTML = `<div class="empty">読み込みに失敗しました<br><small>${e.message}</small></div>`;
+  }
+}
+
+// ============================================================
+// 起動
+// ============================================================
+init();
+</script>
+</body>
+</html>
